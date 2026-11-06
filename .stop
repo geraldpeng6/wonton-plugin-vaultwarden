@@ -1,0 +1,19 @@
+待测：wonton-plugin-vaultwarden（分支 feat/vaultwarden，已推到
+github.com/geraldpeng6/wonton-plugin-vaultwarden）的插件验证。1k 装不了插件（#523 未合并，
+插件网络建不出来，2026-11-07 05:29 实测 install 报 all predefined address pools have been
+fully subnetted），需要一台 Docker 网络有余量的机器（titan 或 194）跑：
+
+1. git clone https://github.com/geraldpeng6/wonton-plugin-vaultwarden && git checkout feat/vaultwarden
+2. scripts/dev.sh up                    # 核心栈（会拉 ghcr.io 核心镜像；插件镜像 vaultwarden/server:1.37.5 按摘要固定，install 时拉）
+3. scripts/dev.sh install --yes         # 装插件：预览应列出 network.lan + network.egress、OIDC 自动登录、局域网端口 8222
+4. scripts/dev.sh probes                # 身份探针走完整 OIDC 授权码流程（PKCE），断言认出云吞用户
+5. scripts/dev.sh smoke                 # 套件钉在模板 chore/smoke-data@ad57cba（六项冒烟，含重装保数据；该分支未合并 main）
+6. 截图（商店素材）：390×844（DPR 2）浏览器，核心令牌登录后打开插件网页，SSO 登录 vaultwarden、
+   设主密码、建几条编造的示例条目，截 密码库列表/条目详情/新建条目 三张竖屏存 screenshots/。
+
+注意：套件是 smoke-data 分支（数据探针钩子），six-item smoke 要在它合并 main 前用这个钉定跑；
+网络受限的机器上起核心栈需要模板 main 的 WONTON_DEV_CORE_SUBNET（10.214.x.0/24）机制，两件事互不冲突。
+
+另一条自动恢复路径：如果 won#523（核心自挑网段）和模板 #18（smoke-data 数据探针）都合并了，
+我会把套件升到模板 main、在 1k 用新 acquire 格式自行完整验证（.stop 会自己删掉），就不必另外安排机器。
+负责人口头确认哪台机器跑之后，我在那台机器上继续（或由在场的 Agent 按上面步骤代跑，结果发回）。

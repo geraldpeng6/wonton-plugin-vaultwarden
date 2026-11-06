@@ -1,78 +1,102 @@
-# 示例插件：nginx 显示一个网页，向登录的人问好。改成自己的应用见 https://github.com/geraldpeng6/wonton-docs/blob/main/develop.md#写插件。
+# Vaultwarden 密码管理插件：网页经核心网关打开，登录走核心的身份提供方（SSO_*，1.37 起的 OIDC 变量）。
+# 直连取舍见 README 的“Bitwarden 客户端直连”。
 services:
-  web:
-    # 镜像按摘要固定（多架构镜像写清单列表的摘要），标签只给人看。
-    image: nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d
+  vaultwarden:
+    image: vaultwarden/server:1.37.5@sha256:4fe17f415f90087377d37c755e0ea3cf189dcc6794e49cdd2a9adbb4937d9e1f
+    # 上游镜像能以任意 uid 运行：数据目录属主是 PUID:PGID，容器就用它跑，不留在 root。
+    user: "${PUID}:${PGID}"
     environment:
-      # 网关代登录：SSI 回显的 Remote-User 只信核心带来的。官方镜像启动时对 templates 目录里的
-      # *.template 做 envsubst，把下面的地址换进 nginx 配置（见 web/default.conf.template）。
-      WONTON_CORE_ADDRESS: ${WONTON_CORE_ADDRESS}
-    # 包里的文件经 configs 交给容器（核心在启动前写进去），不能用卷挂载。
-    configs:
-      - source: site
-        target: /etc/nginx/templates/default.conf.template
-      - source: page
-        target: /usr/share/nginx/html/index.html
-      - source: tokens
-        target: /usr/share/nginx/html/tokens.css
+      # 上游镜像默认 80，非 root 监听不了特权端口，换高位端口。
+      ROCKET_PORT: "8222"
+      # SSO 回调地址由 DOMAIN 生成（<DOMAIN>/identity/connect/oidc-signin），必须和核心登记的
+      # 回调路径一致；经网关访问时就是插件的网页地址。
+      DOMAIN: ${WONTON_APP_URL}
+      # 邮箱注册只关这一项，SSO 建号走 SSO_SIGNUPS_ALLOWED（默认开）：唯一账号由本人第一次 SSO 登录创建。
+      SIGNUPS_ALLOWED: "false"
+      # 网关重新设置 X-Forwarded-For，按它取客户端地址，登录限速才按真人算。
+      IP_HEADER: X-Forwarded-For
+      TZ: ${TZ}
+      # 1.37 起的 SSO_* 变量，值来自核心注入的 OIDC 客户端。
+      SSO_ENABLED: "true"
+      # 保留邮箱+主密码登录：Bitwarden 客户端直连（局域网开关、公网接入）走不了核心的登录页。
+      SSO_ONLY: "false"
+      SSO_CLIENT_ID: ${WONTON_OIDC_CLIENT_ID}
+      SSO_CLIENT_SECRET: ${WONTON_OIDC_CLIENT_SECRET}
+      SSO_AUTHORITY: ${WONTON_OIDC_ISSUER}
+    volumes:
+      # SQLite 数据库、附件、图标缓存都在 /data，一个目录全带上。
+      - ${WONTON_APP_DATA}:/data
+    # /alive 会真的查一次数据库连接（源码里 alive 带 DbConn）；--noproxy 免受出网代理变量影响。
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      test: ["CMD", "curl", "--noproxy", "*", "--fail", "--silent", "--show-error", "http://127.0.0.1:8222/alive"]
       interval: 30s
       timeout: 5s
-      start_period: 30s
+      retries: 5
+      start_period: 60s
       start_interval: 1s
-
-configs:
-  site:
-    file: web/default.conf.template
-  page:
-    file: web/index.html
-  tokens:
-    file: web/tokens.css
 
 x-wonton:
   spec: "0.5"
-  # 换成你自己的：反向域名形式，装上以后不能改。
-  id: app.example.hello
-  version: 0.1.1
+  id: app.vaultwarden.vaultwarden
+  version: 0.1.0
   kind: app
-  title: { zh: 你好, en: Hello }
-  description: { zh: 向登录的人问好的示例网页, en: An example page that greets whoever is signed in }
+  title: { en: Vaultwarden }
+  description:
+    zh: 自托管密码管理，存密码、密钥和银行卡，多端同步
+    en: Self-hosted password manager for logins, keys and cards, synced across your devices
   icon: icon.svg
   notices: [NOTICE]
-  screenshots: [screenshots/home.png]
-  author: { name: Example }
-  homepage: https://nginx.org
-  # 应用（这里是 nginx）的许可证；插件包自己的许可证写在仓库的 LICENSE 里。
-  license: BSD-2-Clause
+  screenshots:
+    - screenshots/vault.png
+    - screenshots/item.png
+    - screenshots/new-item.png
+  author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
+  homepage: https://github.com/dani-garcia/vaultwarden
+  # 上游应用的许可证；插件包自己的许可证在仓库的 LICENSE（MIT）里。
+  license: AGPL-3.0-only
   tags:
-    zh: [工具]
-    en: [Tools]
+    zh: [安全, 密码管理]
+    en: [Security, Passwords]
   about:
     zh: |
-      一个示例网页：登录以后，页面会向你问好。新建插件时可以照着改。
+      在自己家里放一个密码库：登录、身份、支付卡和安全笔记都存本地，浏览器和手机的 Bitwarden 客户端都能同步。
+
+      网页经云吞网关打开，登录用云吞的身份（OIDC 单点登录），不用再记一个服务端密码。第一次进网页 vault 后
+      按提示设置主密码，之后 Bitwarden 客户端直连时用邮箱加主密码登录。
+
+      Bitwarden 客户端直连：插件详情页打开“局域网端口”后，客户端把地址填成 http://<局域网地址>:8222 即可。
+      需要访问外网：抓取条目里网站的图标；密码库数据本身不出网。
     en: |
-      An example page: once you are signed in, the page says hello. Copy it as a starting point for a new plugin.
-  release_notes: { zh: 名字和说明更新。, en: Product name and description update. }
+      Keep your password vault at home: logins, identities, cards and secure notes stay on your own server, synced
+      with the Bitwarden apps in your browser and phone.
+
+      The web vault opens through the Wonton gateway and signs in with your Wonton identity (OIDC single sign-on);
+      no extra server password to remember. On first visit the web vault asks you to set a master password, which
+      is what the Bitwarden apps use when they connect directly.
+
+      Bitwarden clients: turn on the LAN port in the plugin details and point the app at http://<lan-address>:8222.
+      Needs internet access to fetch website icons for your items; vault data itself never leaves home.
+  release_notes:
+    zh: 首个版本：SSO 单点登录，网页 vault 和 Bitwarden 客户端直连。
+    en: "First release: SSO sign-in, web vault and direct Bitwarden client connections."
   webui:
-    service: web
-    port: 80
-    # 示例页回显网关注入的用户名，见 https://github.com/geraldpeng6/wonton-docs/blob/main/plugin-spec.md#网关代登录sso-proxy。
-    sso: proxy
-    proxy:
-      headers:
-        Remote-User: "{user}"
-  # 能放到底栏的页面，见 https://github.com/geraldpeng6/wonton-docs/blob/main/plugin-spec.md#底栏页面tabs。放不放由用户决定。
-  tabs:
-    - id: home
-      title: { zh: 主页, en: Home }
-      icon: tabs/home.svg
-      icon_selected: tabs/home-fill.svg
-      path: /
-      # 这个页面没做适配，用默认的 inset：页面夹在 App 的栏中间，不会被挡。
-      # 想让内容从栏下滚过，写 layout: edge-to-edge，并用 --wonton-inset-* 留出栏的位置。
-  permissions: []
-  # 上游 nginx 官方镜像，amd64 和 arm64 都有；上游没写最低内存，按本机空闲实测取整（实测约 24M，取 64M）。
+    service: vaultwarden
+    port: 8222
+    sso: oidc
+    oidc:
+      # vaultwarden 的 SSO 回调路径由 DOMAIN 生成：<DOMAIN>/identity/connect/oidc-signin。
+      redirect_paths: [/identity/connect/oidc-signin]
+  # Bitwarden 客户端直连的入口：默认关，插件详情页的开关打开后 8222 开在局域网地址上，
+  # 客户端用邮箱+主密码登录（见 about 和 README 的取舍说明）。
+  lan:
+    ports:
+      - { service: vaultwarden, port: 8222 }
+  permissions:
+    # 局域网端口：Bitwarden 客户端直连的入口，默认关。
+    - network.lan
+    # 抓取条目网站的图标；密码库本身不出网。
+    - network.egress
+  # 上游没写最低内存；本机空闲实测约 15M（docker stats，装完含建库），取 128M。上游多架构清单含 amd64 和 arm64（经 registry API 核对 1.37.5）。
   requirements:
     arch: [amd64, arm64]
-    memory: 64M
+    memory: 128M

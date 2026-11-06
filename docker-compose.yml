@@ -47,8 +47,8 @@ x-wonton:
   icon: icon.svg
   notices: [NOTICE]
   screenshots:
-    - screenshots/vault.png
-    - screenshots/item.png
+    - screenshots/item-detail.png
+    - screenshots/generator.png
     - screenshots/new-item.png
   author: { name: geraldpeng6, url: https://github.com/geraldpeng6 }
   homepage: https://github.com/dani-garcia/vaultwarden

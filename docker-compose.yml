@@ -36,7 +36,7 @@ services:
       start_interval: 1s
 
 x-wonton:
-  spec: "0.5"
+  spec: "0.6"
   id: app.vaultwarden.vaultwarden
   version: 0.1.0
   kind: app

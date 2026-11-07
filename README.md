@@ -25,7 +25,7 @@ Vaultwarden 自带的网页密码库和 Bitwarden 官方客户端（浏览器扩
 只接受 `https://` 的服务器地址，`localhost` 也不例外（[bitwarden/clients#17095](https://github.com/bitwarden/clients/pull/17095)、[#17409](https://github.com/bitwarden/clients/issues/17409)）。
 云吞的隧道里是 http，所以：
 
-- 网页密码库在 App 的 WebView 里打得开，但登录时被拒；
+- 网页密码库在 App 的 WebView 里打得开，但注册、登录时被网页自己拒掉（Vaultwarden Web 2026.10.1 报 “Insecure URL not allowed. All URLs must use HTTPS.”）。`*.localhost` 页面虽然是安全上下文，这项检查只看地址是不是 https；
 - 官方客户端填 `http://<局域网地址>:8222` 也连不上（iOS App 有人说 http 还能用，没核实）。
 
 能用的只有云吞单点登录这一段（OIDC 授权码流程走通）。网页密码库和客户端要等云吞的公网入口（https 域名加公共证书），

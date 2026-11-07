@@ -5,3 +5,7 @@ updates:
     directory: /
     schedule:
       interval: daily
+    ignore:
+      # SQLite 库文件就在数据目录里，大版本升级可能带库迁移；升级前要人工备份，交给 dependabot 会直接升上去。
+      - dependency-name: "vaultwarden/server"
+        update-types: ["version-update:semver-major"]

@@ -3,7 +3,10 @@
 开发流程见[插件开发指南](https://github.com/geraldpeng6/wonton-docs/blob/main/develop.md)。
 
 Vaultwarden（[github.com/dani-garcia/vaultwarden](https://github.com/dani-garcia/vaultwarden)，AGPL-3.0-only）是
-自托管的密码管理服务，兼容 Bitwarden 客户端。这个插件把它装进云吞：网页经核心网关打开，登录走核心的身份提供方
+自托管的密码管理服务，兼容 Bitwarden 客户端。
+
+> **需要 https，暂不上架。** 网页密码库和 Bitwarden 客户端只认 https 的服务器地址，云吞隧道里是 http，存不了密码，
+> 所以这个插件暂不进商店。等云吞有了公网入口（或 App 内 https）再上架。这个插件把它装进云吞：网页经核心网关打开，登录走核心的身份提供方
 （`sso: oidc`，Vaultwarden 1.37 起的 `SSO_*` 变量），数据（SQLite、附件、图标缓存）在插件自己的数据目录里。
 
 ## 插件行为
@@ -26,7 +29,7 @@ Vaultwarden 自带的网页密码库和 Bitwarden 官方客户端（浏览器扩
 - 官方客户端填 `http://<局域网地址>:8222` 也连不上（iOS App 有人说 http 还能用，没核实）。
 
 能用的只有云吞单点登录这一段（OIDC 授权码流程走通）。网页密码库和客户端要等云吞的公网入口（https 域名加公共证书），
-那时客户端填公网地址即可，手机上不用装证书。商店说明照实写了这一句。
+那时客户端填公网地址即可，手机上不用装证书。
 
 局域网端口开关（默认关）留着：公网入口之前它只对还接受 http 的客户端有用；打开后 8222 开在局域网地址上，
 客户端用邮箱加主密码登录，不依赖网关的 SSO 回调地址。

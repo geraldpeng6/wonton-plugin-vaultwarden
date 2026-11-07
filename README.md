@@ -19,7 +19,7 @@ Vaultwarden（[github.com/dani-garcia/vaultwarden](https://github.com/dani-garci
 ## 网页密码库和 Bitwarden 客户端：要等 https
 
 Vaultwarden 自带的网页密码库和 Bitwarden 官方客户端（浏览器扩展、桌面版、命令行从 2025.11 起，Android 从 2025.8 起）
-只接受 `https://` 的服务器地址，`localhost` 也不例外（[bitwarden/clients#17095](https://github.com/bitwarden/clients/issues/17409)）。
+只接受 `https://` 的服务器地址，`localhost` 也不例外（[bitwarden/clients#17095](https://github.com/bitwarden/clients/pull/17095)、[#17409](https://github.com/bitwarden/clients/issues/17409)）。
 云吞的隧道里是 http，所以：
 
 - 网页密码库在 App 的 WebView 里打得开，但登录时被拒；

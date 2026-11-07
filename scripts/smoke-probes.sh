@@ -22,7 +22,7 @@ vw_sso_login() {
 import base64, hashlib, secrets
 verifier = base64.urlsafe_b64encode(secrets.token_bytes(48)).rstrip(b'=').decode()
 challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b'=').decode()
-# state 要能过 vaultwarden 的 base64 解码（标准字母表）：24 字节输入没有补位，URL 里不用带 =。
+# state 要能过 vaultwarden 的 base64 解码（标准字母表，见 sso.rs decode_state），不能换成 urlsafe。
 state = base64.b64encode(("probe-" + secrets.token_hex(9)).encode()).decode()
 print(verifier, challenge, state)
 PY
@@ -30,8 +30,12 @@ PY
   [[ -n "$verifier" && -n "$challenge" && -n "$state" ]] || { echo "生成 PKCE/state 失败"; return 1; }
   enc_redirect="$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1],safe=""))' "$SMOKE_WEB_URL/sso-connector.html")"
 
+  # 先经套件入口走一遍网关的 SSO 跳板（fresh 才会真的走）：核心会话 → 身份方会话，
+  # 后面的 hydra authorize 才不会停在身份方登录页。
+  dweb --fresh --sso / >/dev/null 2>&1 || { echo "SSO 跳板走不通"; return 1; }
+
   # 起点必须是 vaultwarden 自己的 authorize：它种下浏览器绑定 Cookie（VW_SSO_BINDING），回调时校验。
-  # 同一个 cookie jar（SMOKE_JAR）带上核心会话（身份方自动登录）和这个绑定 Cookie，全程 -L。
+  # 同一个 cookie jar（SMOKE_JAR）带上身份方会话和这个绑定 Cookie，全程 -L。
   final="$(curl -sS --noproxy '*' -o /dev/null -L -b "$SMOKE_JAR" -c "$SMOKE_JAR" -H 'Accept: text/html' \
     --max-time 90 -w '%{url_effective}' \
     "$SMOKE_WEB_URL/identity/connect/authorize?client_id=web&redirect_uri=$enc_redirect&state=$state&code_challenge=$challenge&code_challenge_method=S256")" ||

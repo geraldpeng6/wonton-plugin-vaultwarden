@@ -12,7 +12,7 @@
 | `web/default.conf.template` | nginx 配置，启用 SSI 回显用户名并提供健康检查入口；只放行来自核心地址（`${WONTON_CORE_ADDRESS}`）的请求，其余来源 403 |
 | `web/index.html` | 问候页 |
 | `web/tokens.css` | 页面主题变量的后备值 |
-| `tabs/` | 示例主页的底栏图标 |
+| `tabs/` | 示例主页的应用页面图标 |
 | `screenshots/home.png` | 商店详情页的示例截图 |
 | `scripts/smoke-probes.sh` | 检查真实页面和网关注入身份的插件探针 |
 

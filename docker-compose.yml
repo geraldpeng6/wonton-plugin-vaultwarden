@@ -62,15 +62,15 @@ x-wonton:
     proxy:
       headers:
         Remote-User: "{user}"
-  # 能放到底栏的页面，见 https://github.com/geraldpeng6/wonton-docs/blob/main/plugin-spec.md#底栏页面tabs。放不放由用户决定。
+  # 能放进侧边栏“我的应用”的页面，见 https://github.com/geraldpeng6/wonton-docs/blob/main/plugin-spec.md#应用页面tabs。放不放由用户决定。
   tabs:
     - id: home
       title: { zh: 主页, en: Home }
       icon: tabs/home.svg
       icon_selected: tabs/home-fill.svg
       path: /
-      # 这个页面没做适配，用默认的 inset：页面夹在 App 的栏中间，不会被挡。
-      # 想让内容从栏下滚过，写 layout: edge-to-edge，并用 --wonton-inset-* 留出栏的位置。
+      # 这个页面没做适配，用默认的 inset：从状态栏下沿开始，页面不用管安全区。
+      # 想让内容从状态栏后面滚过，写 layout: edge-to-edge，并用 --wonton-inset-* 留出系统安全区的位置。
   permissions: []
   # 上游 nginx 官方镜像，amd64 和 arm64 都有；上游没写最低内存，按本机空闲实测取整（实测约 24M，取 64M）。
   requirements:

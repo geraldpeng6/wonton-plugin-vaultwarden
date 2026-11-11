@@ -1,4 +1,4 @@
-# 示例插件：nginx 显示一个网页，向登录的人问好。改成自己的应用见 https://github.com/geraldpeng6/wonton-docs/blob/main/develop.md#写插件。
+# 示例插件：nginx 显示一个网页，向登录的人问好。改成自己的应用见 https://github.com/wontonapp/wonton-docs/blob/main/develop.md#写插件。
 services:
   web:
     # 镜像按摘要固定（多架构镜像写清单列表的摘要），标签只给人看。
@@ -57,12 +57,12 @@ x-wonton:
   webui:
     service: web
     port: 80
-    # 示例页回显网关注入的用户名，见 https://github.com/geraldpeng6/wonton-docs/blob/main/plugin-spec.md#网关代登录sso-proxy。
+    # 示例页回显网关注入的用户名，见 https://github.com/wontonapp/wonton-docs/blob/main/plugin-spec.md#网关代登录sso-proxy。
     sso: proxy
     proxy:
       headers:
         Remote-User: "{user}"
-  # 能放进侧边栏“我的应用”的页面，见 https://github.com/geraldpeng6/wonton-docs/blob/main/plugin-spec.md#应用页面tabs。放不放由用户决定。
+  # 能放进侧边栏“我的应用”的页面，见 https://github.com/wontonapp/wonton-docs/blob/main/plugin-spec.md#应用页面tabs。放不放由用户决定。
   tabs:
     - id: home
       title: { zh: 主页, en: Home }

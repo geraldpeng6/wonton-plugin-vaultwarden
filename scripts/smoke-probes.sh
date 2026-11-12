@@ -16,6 +16,6 @@ identity_check() { # 页面回显的就是网关注入的用户名
   grep -qF "你好，$SMOKE_OWNER" <<<"$page" || { echo "页面没回显用户 $SMOKE_OWNER：$(head -c 120 <<<"$page")"; return 1; }
 }
 
-# 示例插件还没有接入真实应用：nginx 示例页是静态文件，不存任何用户数据，升级/重装两项记 N/A。
+# 沿用模板示例（nginx 静态页）的写法：升级/重装两项记 N/A。
 export DATA_NA=1
 export SMOKE_NOTE="示例插件（nginx 静态页）不存用户数据，数据两项不适用；真实应用接入后补数据探针。"
